@@ -97,11 +97,14 @@ You can also save up to five quick trigger presets from the same section:
 
 ## Screenshots
 
-![Screenshot 1](https://github.com/DDOneApps/FakeCall/blob/main/Screenshots/Screenshot_20260308-211426_Fake%20Call.png)
+![Screenshot 1](https://github.com/DDOneApps/FakeCall/blob/main/metadata/en-US/images/phoneScreenshots/1.png)
 _Main screen_
 
-![Screenshot 3](https://github.com/DDOneApps/FakeCall/blob/main/Screenshots/Screenshot_20260308-212114_Telefon.png)
-_Call interface_
+![Screenshot 3](https://github.com/DDOneApps/FakeCall/blob/main/metadata/en-US/images/phoneScreenshots/3.png)
+_settings screen_
+
+![Screenshot 4](https://github.com/DDOneApps/FakeCall/blob/main/metadata/en-US/images/phoneScreenshots/2.png)
+_Incoming call (example)_
 
 ## Tech Stack
 
