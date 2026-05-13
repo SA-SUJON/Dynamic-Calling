@@ -106,6 +106,7 @@ import com.upnp.fakeCall.FakeCallViewModel
 import com.upnp.fakeCall.QuickTriggerManager
 import com.upnp.fakeCall.ReleaseInfo
 import com.upnp.fakeCall.R
+import com.upnp.fakeCall.SimProviderOption
 import com.upnp.fakeCall.UpdateCheckResult
 import com.upnp.fakeCall.ivr.IvrNode
 import com.upnp.fakeCall.ui.components.AnimatedIcon
@@ -139,6 +140,8 @@ fun SettingsScreen(
     var callRingTimeoutExpanded by rememberSaveable { mutableStateOf(false) }
     var alarmRingTimeoutExpanded by rememberSaveable { mutableStateOf(false) }
     var updateDialogRelease by remember { mutableStateOf<ReleaseInfo?>(null) }
+    var showSimProviderDialog by remember { mutableStateOf(false) }
+    var simProviderOptions by remember { mutableStateOf<List<SimProviderOption>>(emptyList()) }
     var activeSubmenu by rememberSaveable { mutableStateOf(SettingsSubmenu.MAIN) }
     var backGestureProgress by remember { mutableStateOf(0f) }
 
@@ -346,6 +349,18 @@ fun SettingsScreen(
 
                     item {
                         PreferenceCard(
+                            icon = Icons.Outlined.Phone,
+                            title = stringResource(R.string.settings_use_sim_provider_title),
+                            subtitle = stringResource(R.string.settings_use_sim_provider_subtitle),
+                            onClick = {
+                                simProviderOptions = viewModel.loadSimProviderOptions()
+                                showSimProviderDialog = true
+                            }
+                        )
+                    }
+
+                    item {
+                        PreferenceCard(
                             icon = Icons.Outlined.Settings,
                             title = stringResource(R.string.settings_enable_provider_title),
                             subtitle = if (state.isProviderEnabled) {
@@ -380,6 +395,33 @@ fun SettingsScreen(
                             subtitle = stringResource(R.string.settings_use_default_audio_subtitle),
                             onClick = viewModel::clearAudioSelection
                         )
+                    }
+
+                    item {
+                        PreferenceCard(
+                            icon = Icons.Outlined.Mic,
+                            title = stringResource(R.string.settings_mic_recording_title),
+                            subtitle = if (state.isRecordingEnabled) stringResource(R.string.settings_mic_recording_enabled) else stringResource(R.string.settings_mic_recording_disabled),
+                            onClick = null,
+                            trailingContent = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Switch(
+                                        checked = state.isRecordingEnabled,
+                                        onCheckedChange = viewModel::onRecordingEnabledChange
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    androidx.compose.material3.Icon(
+                                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    item {
+                        PreferenceCategoryHeader(stringResource(R.string.settings_category_call_behavior))
                     }
 
                     item {
@@ -476,29 +518,6 @@ fun SettingsScreen(
                                 }
                             }
                         }
-                    }
-
-                    item {
-                        PreferenceCard(
-                            icon = Icons.Outlined.Mic,
-                            title = stringResource(R.string.settings_mic_recording_title),
-                            subtitle = if (state.isRecordingEnabled) stringResource(R.string.settings_mic_recording_enabled) else stringResource(R.string.settings_mic_recording_disabled),
-                            onClick = null,
-                            trailingContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Switch(
-                                        checked = state.isRecordingEnabled,
-                                        onCheckedChange = viewModel::onRecordingEnabledChange
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    androidx.compose.material3.Icon(
-                                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        )
                     }
 
                     item {
@@ -1111,6 +1130,18 @@ fun SettingsScreen(
                     Text(stringResource(R.string.action_later))
                 }
             }
+        )
+    }
+
+    if (showSimProviderDialog) {
+        SimProviderPickerDialog(
+            options = simProviderOptions,
+            onSelect = { option ->
+                viewModel.applySimProviderName(option)
+                showSimProviderDialog = false
+            },
+            onKeepCurrent = { showSimProviderDialog = false },
+            onDismiss = { showSimProviderDialog = false }
         )
     }
 }

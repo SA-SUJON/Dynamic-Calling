@@ -109,6 +109,7 @@ object AlarmModeScheduler {
             putExtra(AlarmModeAlarmReceiver.EXTRA_REPEAT_DAYS, alarm.repeatDays.toIntArray())
             putExtra(AlarmModeAlarmReceiver.EXTRA_MESSAGE_MODE, alarm.messageMode.name)
             putExtra(AlarmModeAlarmReceiver.EXTRA_TTS_MESSAGE, alarm.ttsMessage)
+            putExtra(AlarmModeAlarmReceiver.EXTRA_REPEAT_TTS_MESSAGE, alarm.repeatTtsMessage)
             putExtra(AlarmModeAlarmReceiver.EXTRA_CUSTOM_AUDIO_URI, alarm.customAudioUri)
             putExtra(AlarmModeAlarmReceiver.EXTRA_CUSTOM_AUDIO_NAME, alarm.customAudioName)
             putExtra(AlarmModeAlarmReceiver.EXTRA_SNOOZE_ENABLED, alarm.snoozeEnabled)

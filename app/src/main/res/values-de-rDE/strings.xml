@@ -71,10 +71,13 @@
     <string name="settings_provider_name_label">Anbietername</string>
     <string name="settings_save_provider_title">Anbieter speichern &amp; registrieren</string>
     <string name="settings_save_provider_subtitle">Macht dieses Konto für eingehende Anrufe verfügbar.</string>
+    <string name="settings_use_sim_provider_title">SIM-Anbietername verwenden</string>
+    <string name="settings_use_sim_provider_subtitle">Wähle einen Anbieternamen von einer echten SIM auf diesem Gerät.</string>
     <string name="settings_enable_provider_title">Anbieter im System aktivieren</string>
     <string name="settings_provider_enabled">Anbieter ist aktiviert.</string>
     <string name="settings_provider_disabled">Öffne Anrufkonten, um ihn zu aktivieren.</string>
     <string name="settings_category_audio">Audio</string>
+    <string name="settings_category_call_behavior">Anrufverhalten</string>
     <string name="settings_select_audio_title">Audiodatei auswählen</string>
     <string name="settings_select_audio_subtitle">Aktuell: %s</string>
     <string name="settings_use_default_audio_title">Standard-Audio verwenden</string>
@@ -210,6 +213,12 @@
     <string name="action_cancel">Abbrechen</string>
     <string name="action_remove">Entfernen</string>
     <string name="action_apply">Anwenden</string>
+    <string name="sim_provider_dialog_title">SIM-Anbietername verwenden?</string>
+    <string name="sim_provider_dialog_subtitle">Wähle, welcher SIM-Anbieter als FakeCall-Anbieter angezeigt werden soll.</string>
+    <string name="sim_provider_no_sims">Es wurde kein lesbarer SIM-Anbieter gefunden. Prüfe die Telefonberechtigungen oder gib den Anbieternamen manuell ein.</string>
+    <string name="sim_provider_slot_label">SIM-Steckplatz %1$d</string>
+    <string name="sim_provider_use_this">Diesen Anbieter verwenden</string>
+    <string name="sim_provider_keep_current">Aktuellen behalten</string>
     <!-- Default values -->
     <string name="default_audio_name">Standard</string>
     <string name="default_provider_name">Fake Call Anbieter</string>

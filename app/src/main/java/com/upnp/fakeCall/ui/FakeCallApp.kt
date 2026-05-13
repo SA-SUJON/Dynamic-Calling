@@ -60,6 +60,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -425,18 +426,6 @@ private fun HomeModeNavigationBar(
     onSelectDashboard: () -> Unit,
     onSelectAlarm: () -> Unit
 ) {
-    val navContainerColor by animateColorAsState(
-        targetValue = if (selectedRoute == ROUTE_ALARM) {
-            MaterialTheme.colorScheme.secondaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "modeBarContainer"
-    )
     val selectedIndex = if (selectedRoute == ROUTE_ALARM) 1 else 0
 
     Box(
@@ -449,7 +438,7 @@ private fun HomeModeNavigationBar(
         Surface(
             modifier = Modifier.widthIn(min = 236.dp, max = 312.dp),
             shape = RoundedCornerShape(28.dp),
-            color = navContainerColor,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 2.dp
         ) {
             BoxWithConstraints(
@@ -522,6 +511,7 @@ private fun ModeSwitchItem(
     Row(
         modifier = modifier
             .height(46.dp)
+            .clip(RoundedCornerShape(22.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,

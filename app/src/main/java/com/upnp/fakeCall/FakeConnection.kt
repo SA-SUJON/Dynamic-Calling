@@ -22,6 +22,7 @@ import android.telecom.DisconnectCause
 import android.telecom.PhoneAccount
 import android.telecom.TelecomManager
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.upnp.fakeCall.ivr.IvrConfigStore
@@ -48,7 +49,8 @@ class FakeConnection(
     private var ivrStateMachine: IvrStateMachine? = null
     private var ivrAudioAttributes: AudioAttributes? = null
     private var ttsEngine: TextToSpeech? = null
-    private var pendingTtsMessage: String? = null
+    private var pendingTtsRequest: TtsRequest? = null
+    private var repeatingTtsMessage: String? = null
     private val folderNavStack = mutableListOf<FolderNavState>()
     private val runtimeOverrides: RuntimeOverrides = consumeRuntimeOverrides()
     private val ringTimeoutHandler = Handler(Looper.getMainLooper())
@@ -207,7 +209,7 @@ class FakeConnection(
                     context.getString(R.string.alarm_tts_default_message)
                 }
             }
-            speakFolderPrompt(message)
+            speakPrompt(message, repeat = runtimeOverrides.repeatTtsMessage)
             return
         }
         if (startFolderModeIfEnabled()) {
@@ -463,17 +465,31 @@ class FakeConnection(
     }
 
     private fun speakFolderPrompt(message: String) {
+        speakPrompt(message, repeat = false)
+    }
+
+    private fun speakPrompt(message: String, repeat: Boolean) {
         if (message.isBlank()) return
         val existing = ttsEngine
         if (existing != null) {
-            runCatching {
-                existing.stop()
-                existing.speak(message, TextToSpeech.QUEUE_FLUSH, null, "mp3_ivr_${System.currentTimeMillis()}")
-            }
+            speakWithTts(existing, message, repeat)
             return
         }
-        pendingTtsMessage = message
+        pendingTtsRequest = TtsRequest(message = message, repeat = repeat)
         initializeTtsIfNeeded()
+    }
+
+    private fun speakWithTts(tts: TextToSpeech, message: String, repeat: Boolean) {
+        repeatingTtsMessage = if (repeat) message else null
+        runCatching {
+            tts.stop()
+            tts.speak(
+                message,
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                if (repeat) TTS_REPEAT_UTTERANCE_ID else "tts_${System.currentTimeMillis()}"
+            )
+        }
     }
 
     private fun initializeTtsIfNeeded() {
@@ -493,17 +509,33 @@ class FakeConnection(
                     newEngine?.setAudioAttributes(buildVoiceAudioAttributes())
                 }
             }
-            pendingTtsMessage?.let { text ->
-                runCatching {
-                    newEngine?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "mp3_ivr_init")
+            newEngine?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) = Unit
+
+                override fun onDone(utteranceId: String?) {
+                    if (utteranceId != TTS_REPEAT_UTTERANCE_ID) return
+                    val message = repeatingTtsMessage ?: return
+                    ringTimeoutHandler.postDelayed({
+                        val activeEngine = ttsEngine ?: return@postDelayed
+                        if (activeEngine === newEngine && repeatingTtsMessage == message) {
+                            speakWithTts(activeEngine, message, repeat = true)
+                        }
+                    }, TTS_REPEAT_DELAY_MILLIS)
                 }
+
+                @Deprecated("Deprecated in Java")
+                override fun onError(utteranceId: String?) = Unit
+            })
+            pendingTtsRequest?.let { request ->
+                speakWithTts(newEngine!!, request.message, request.repeat)
             }
-            pendingTtsMessage = null
+            pendingTtsRequest = null
         }
     }
 
     private fun shutdownTts() {
-        pendingTtsMessage = null
+        pendingTtsRequest = null
+        repeatingTtsMessage = null
         ttsEngine?.let { tts ->
             runCatching { tts.stop() }
             runCatching { tts.shutdown() }
@@ -694,6 +726,7 @@ class FakeConnection(
             else -> RuntimeMessageMode.DEFAULT
         }
         val ttsMessage = prefs.getString(KEY_RUNTIME_TTS_MESSAGE, "").orEmpty()
+        val repeatTtsMessage = prefs.getBoolean(KEY_RUNTIME_REPEAT_TTS_MESSAGE, false)
         val speakerDefault = runCatching {
             AlarmSpeakerDefault.valueOf(
                 prefs.getString(KEY_RUNTIME_SPEAKER_DEFAULT, AlarmSpeakerDefault.EARPIECE.name).orEmpty()
@@ -715,6 +748,7 @@ class FakeConnection(
             .remove(KEY_RUNTIME_AUDIO_OVERRIDE_NAME)
             .remove(KEY_RUNTIME_MESSAGE_MODE)
             .remove(KEY_RUNTIME_TTS_MESSAGE)
+            .remove(KEY_RUNTIME_REPEAT_TTS_MESSAGE)
             .remove(KEY_RUNTIME_SPEAKER_DEFAULT)
             .remove(KEY_RUNTIME_SNOOZE_ENABLED)
             .remove(KEY_RUNTIME_SNOOZE_MINUTES)
@@ -728,6 +762,7 @@ class FakeConnection(
             messageMode = messageMode,
             customAudioUri = customAudioUri,
             ttsMessage = ttsMessage,
+            repeatTtsMessage = repeatTtsMessage,
             speakerDefault = speakerDefault,
             snoozeEnabled = snoozeEnabled,
             snoozeMinutes = snoozeMinutes,
@@ -762,6 +797,7 @@ class FakeConnection(
                 AlarmMessageMode.CUSTOM_AUDIO
             },
             ttsMessage = runtimeOverrides.ttsMessage,
+            repeatTtsMessage = runtimeOverrides.repeatTtsMessage,
             customAudioUri = runtimeOverrides.customAudioUri,
             customAudioName = "",
             snoozeEnabled = runtimeOverrides.snoozeEnabled,
@@ -842,6 +878,7 @@ class FakeConnection(
         private const val KEY_RUNTIME_AUDIO_OVERRIDE_NAME = "runtime_audio_override_name"
         private const val KEY_RUNTIME_MESSAGE_MODE = "runtime_message_mode"
         private const val KEY_RUNTIME_TTS_MESSAGE = "runtime_tts_message"
+        private const val KEY_RUNTIME_REPEAT_TTS_MESSAGE = "runtime_repeat_tts_message"
         private const val KEY_RUNTIME_SPEAKER_DEFAULT = "runtime_speaker_default"
         private const val KEY_RUNTIME_SNOOZE_ENABLED = "runtime_snooze_enabled"
         private const val KEY_RUNTIME_SNOOZE_MINUTES = "runtime_snooze_minutes"
@@ -857,6 +894,8 @@ class FakeConnection(
         private const val KEY_MP3_IVR_FOLDER_URI = "mp3_ivr_folder_uri"
         private const val KEY_MP3_IVR_FOLDER_NAME = "mp3_ivr_folder_name"
         private const val FOLDER_PAGE_SIZE = 9
+        private const val TTS_REPEAT_UTTERANCE_ID = "alarm_tts_repeat"
+        private const val TTS_REPEAT_DELAY_MILLIS = 750L
     }
 
     private fun finalizeRecordingDestination(stoppedCleanly: Boolean) {
@@ -921,6 +960,11 @@ private data class RecordingDestination(
     val file: File?
 )
 
+private data class TtsRequest(
+    val message: String,
+    val repeat: Boolean
+)
+
 private data class FolderNavEntry(
     val uri: Uri,
     val displayName: String,
@@ -944,6 +988,7 @@ private data class RuntimeOverrides(
     val messageMode: RuntimeMessageMode = RuntimeMessageMode.DEFAULT,
     val customAudioUri: String = "",
     val ttsMessage: String = "",
+    val repeatTtsMessage: Boolean = false,
     val speakerDefault: AlarmSpeakerDefault = AlarmSpeakerDefault.EARPIECE,
     val snoozeEnabled: Boolean = false,
     val snoozeMinutes: Int = 5,

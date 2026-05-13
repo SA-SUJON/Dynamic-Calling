@@ -1,11 +1,13 @@
 package com.upnp.fakeCall
 
+import android.Manifest
 import android.app.Application
 import android.content.ContentUris
 import android.os.Build
 import com.upnp.fakeCall.R
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
@@ -13,6 +15,7 @@ import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.DocumentsContract
 import android.provider.Settings
+import android.telephony.SubscriptionManager
 import android.telecom.TelecomManager
 import android.util.Base64
 import androidx.lifecycle.AndroidViewModel
@@ -65,6 +68,13 @@ data class CustomPreset(
     val minute: Int = 0
 )
 
+data class SimProviderOption(
+    val subscriptionId: Int,
+    val displayName: String,
+    val carrierName: String,
+    val slotIndex: Int
+)
+
 data class FakeCallUiState(
     val isOnboardingComplete: Boolean = false,
     val providerName: String = "",
@@ -98,7 +108,7 @@ data class FakeCallUiState(
     val quickTriggerPresets: List<QuickTriggerPreset> = emptyList(),
     val quickTriggerDefaultPresetSlot: Int? = null,
     val callRingTimeoutSeconds: Int = 45,
-    val alarmRingTimeoutSeconds: Int = 60,
+    val alarmRingTimeoutSeconds: Int = 0,
     val alarmModeItems: List<AlarmModeItem> = emptyList(),
     val isMp3IvrModeEnabled: Boolean = false,
     val mp3IvrFolderUri: String = "",
@@ -269,6 +279,7 @@ class FakeCallViewModel(application: Application) : AndroidViewModel(application
                 AlarmMessageMode.CUSTOM_AUDIO
             },
             ttsMessage = str(R.string.alarm_tts_default_message),
+            repeatTtsMessage = false,
             customAudioUri = state.selectedAudioUri,
             customAudioName = state.selectedAudioName,
             snoozeEnabled = true,
@@ -287,6 +298,7 @@ class FakeCallViewModel(application: Application) : AndroidViewModel(application
             repeatDays = alarm.repeatDays,
             messageMode = alarm.messageMode,
             ttsMessage = alarm.ttsMessage.ifBlank { str(R.string.alarm_tts_default_message) },
+            repeatTtsMessage = alarm.repeatTtsMessage,
             customAudioUri = alarm.customAudioUri,
             customAudioName = alarm.customAudioName,
             snoozeEnabled = alarm.snoozeEnabled,
@@ -354,6 +366,7 @@ class FakeCallViewModel(application: Application) : AndroidViewModel(application
             repeatDays = normalizedDraft.repeatDays.filter { it in 1..7 }.toSet(),
             messageMode = normalizedDraft.messageMode,
             ttsMessage = normalizedDraft.ttsMessage,
+            repeatTtsMessage = normalizedDraft.repeatTtsMessage,
             customAudioUri = normalizedDraft.customAudioUri,
             customAudioName = normalizedDraft.customAudioName,
             snoozeEnabled = normalizedDraft.snoozeEnabled,
@@ -1029,6 +1042,55 @@ class FakeCallViewModel(application: Application) : AndroidViewModel(application
             )
         }
 
+        refreshProviderStatus()
+    }
+
+    fun loadSimProviderOptions(): List<SimProviderOption> {
+        val context = getApplication<Application>()
+        val hasPermission = context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED ||
+            context.checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) == PackageManager.PERMISSION_GRANTED
+        if (!hasPermission) return emptyList()
+
+        val subscriptionManager = context.getSystemService(SubscriptionManager::class.java) ?: return emptyList()
+        return runCatching {
+            subscriptionManager.activeSubscriptionInfoList.orEmpty()
+                .mapNotNull { info ->
+                    val carrierName = info.carrierName?.toString().orEmpty().trim()
+                    val displayName = info.displayName?.toString().orEmpty().trim()
+                    val providerName = carrierName.ifBlank { displayName }.trim()
+                    if (providerName.isBlank()) return@mapNotNull null
+                    SimProviderOption(
+                        subscriptionId = info.subscriptionId,
+                        displayName = providerName,
+                        carrierName = carrierName,
+                        slotIndex = info.simSlotIndex
+                    )
+                }
+                .distinctBy { option -> option.subscriptionId }
+        }.getOrDefault(emptyList())
+    }
+
+    fun applySimProviderName(option: SimProviderOption) {
+        val providerName = option.displayName.trim()
+            .ifBlank { option.carrierName.trim() }
+            .ifBlank { str(R.string.default_provider_name) }
+        val registered = if (uiState.value.hasRequiredPermissions) {
+            telecomHelper.registerOrUpdatePhoneAccount(providerName)
+        } else {
+            false
+        }
+
+        prefs.edit().putString(KEY_PROVIDER_NAME, providerName).apply()
+        _uiState.update {
+            it.copy(
+                providerName = providerName,
+                statusMessage = when {
+                    !uiState.value.hasRequiredPermissions -> str(R.string.status_grant_permissions_first)
+                    registered -> str(R.string.status_provider_saved)
+                    else -> str(R.string.status_provider_register_failed)
+                }
+            )
+        }
         refreshProviderStatus()
     }
 
@@ -1722,7 +1784,7 @@ class FakeCallViewModel(application: Application) : AndroidViewModel(application
         private const val KEY_CALL_RING_TIMEOUT_SECONDS = "call_ring_timeout_seconds"
         private const val KEY_ALARM_RING_TIMEOUT_SECONDS = "alarm_ring_timeout_seconds"
         private const val DEFAULT_CALL_RING_TIMEOUT_SECONDS = 45
-        private const val DEFAULT_ALARM_RING_TIMEOUT_SECONDS = 60
+        private const val DEFAULT_ALARM_RING_TIMEOUT_SECONDS = 0
         private const val MAX_RECENT_CONTACTS = 12
         private const val MAX_PINNED_CONTACTS = 8
 

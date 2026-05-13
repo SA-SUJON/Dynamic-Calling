@@ -74,10 +74,13 @@
     <string name="settings_provider_name_label">Provider name</string>
     <string name="settings_save_provider_title">Save &amp; register provider</string>
     <string name="settings_save_provider_subtitle">Make this account available for incoming calls.</string>
+    <string name="settings_use_sim_provider_title">Use SIM provider name</string>
+    <string name="settings_use_sim_provider_subtitle">Pick a carrier name from a real SIM on this phone.</string>
     <string name="settings_enable_provider_title">Enable provider in system</string>
     <string name="settings_provider_enabled">Provider is enabled.</string>
     <string name="settings_provider_disabled">Open Calling Accounts to enable it.</string>
     <string name="settings_category_audio">Audio</string>
+    <string name="settings_category_call_behavior">Call behavior</string>
     <string name="settings_select_audio_title">Select audio file</string>
     <string name="settings_select_audio_subtitle">Current: %s</string>
     <string name="settings_use_default_audio_title">Use default audio</string>
@@ -216,6 +219,12 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_remove">Remove</string>
     <string name="action_apply">Apply</string>
+    <string name="sim_provider_dialog_title">Use a SIM provider name?</string>
+    <string name="sim_provider_dialog_subtitle">Choose which SIM carrier should be shown as the FakeCall provider.</string>
+    <string name="sim_provider_no_sims">No readable SIM provider was found. Check phone permissions or enter a provider name manually.</string>
+    <string name="sim_provider_slot_label">SIM slot %1$d</string>
+    <string name="sim_provider_use_this">Use this provider</string>
+    <string name="sim_provider_keep_current">Keep current</string>
 
     <!-- Default values -->
     <string name="default_audio_name">Default</string>
@@ -342,6 +351,8 @@
     <string name="alarm_message_mode_tts">App voice (TTS)</string>
     <string name="alarm_message_mode_custom">Custom voice</string>
     <string name="alarm_tts_message_label">TTS message</string>
+    <string name="alarm_tts_repeat_title">Repeat app voice message</string>
+    <string name="alarm_tts_repeat_subtitle">Keep repeating the spoken message until the call ends.</string>
     <string name="alarm_tts_default_message">Hey, this is your reminder call.</string>
     <string name="alarm_tts_default_message_with_name">%1$s is calling you now.</string>
     <string name="alarm_custom_audio_none">No custom audio selected</string>

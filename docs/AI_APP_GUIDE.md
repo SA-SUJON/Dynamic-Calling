@@ -354,6 +354,7 @@ runtime_audio_override_uri
 runtime_audio_override_name
 runtime_message_mode
 runtime_tts_message
+runtime_repeat_tts_message
 runtime_speaker_default
 runtime_snooze_enabled
 runtime_snooze_minutes
@@ -397,7 +398,7 @@ The account must be enabled by the user in Android Calling Accounts. Registering
 
 1. Reads the appropriate ring timeout from prefs:
    - normal call: `call_ring_timeout_seconds`, default 45
-   - alarm call: `alarm_ring_timeout_seconds`, default 60
+   - alarm call: `alarm_ring_timeout_seconds`, default 0 (unlimited)
 2. Builds incoming call extras:
    - `extra_fake_caller_name`
    - `extra_fake_caller_number`
@@ -816,7 +817,7 @@ adb shell am broadcast -a com.upnp.fakeCall.TRIGGER -p com.upnp.fakeCall --es ca
 
 ## 13. Alarm Mode
 
-Alarm mode is separate from normal dashboard calls. It schedules call-based alarms/reminders at exact clock times, optionally repeating on weekdays, playing TTS or custom audio, using a speaker default, and allowing snooze.
+Alarm mode is separate from normal dashboard calls. It schedules call-based alarms/reminders at exact clock times, optionally repeating on weekdays, playing TTS or custom audio, optionally repeating the TTS message until the call ends, using a speaker default, and allowing snooze.
 
 ### 13.1 Data Model
 
@@ -830,6 +831,7 @@ Alarm mode is separate from normal dashboard calls. It schedules call-based alar
 - repeat days
 - message mode
 - TTS message
+- repeat TTS message flag
 - custom audio URI/name
 - snooze enabled
 - snooze minutes
@@ -902,7 +904,7 @@ Request code:
 
 1. Reads the alarm id and caller number. Returns if invalid.
 2. Reads provider name from prefs.
-3. Reads alarm message mode, TTS, custom audio, snooze, and speaker settings from intent extras.
+3. Reads alarm message mode, TTS, repeat-TTS, custom audio, snooze, and speaker settings from intent extras.
 4. Writes runtime overrides for `FakeConnection`.
 5. Registers/updates phone account.
 6. If account is enabled, triggers incoming call with source `ALARM`.
@@ -968,7 +970,7 @@ It calls ViewModel methods for all state changes and scheduling.
 
 Feature areas include:
 
-- Provider setup
+- Provider setup, including optional provider-name selection from active SIM carriers
 - Calling account status/action
 - Audio file selection and default audio behavior
 - Normal and alarm ring timeout
@@ -998,6 +1000,7 @@ Feature areas include:
 - repeat weekdays
 - message mode
 - TTS message
+- repeat TTS message toggle
 - custom audio selection
 - snooze settings
 - speaker default

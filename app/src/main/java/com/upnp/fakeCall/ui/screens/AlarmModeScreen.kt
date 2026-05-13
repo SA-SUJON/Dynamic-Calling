@@ -547,6 +547,27 @@ fun AlarmCreateScreen(
                             onValueChange = { draft = draft.copy(ttsMessage = it) },
                             label = stringResource(R.string.alarm_tts_message_label)
                         )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.alarm_tts_repeat_title),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = stringResource(R.string.alarm_tts_repeat_subtitle),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = draft.repeatTtsMessage,
+                                onCheckedChange = { draft = draft.copy(repeatTtsMessage = it) }
+                            )
+                        }
                     } else {
                         Text(
                             text = if (draft.customAudioName.isBlank()) {

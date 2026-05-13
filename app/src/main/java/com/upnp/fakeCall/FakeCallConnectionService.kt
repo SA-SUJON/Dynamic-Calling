@@ -20,8 +20,9 @@ class FakeCallConnectionService : ConnectionService() {
         val source = IncomingCallSource.fromStorage(
             extras?.getString(TelecomHelper.EXTRA_FAKE_CALL_SOURCE)
         )
-        val ringTimeoutSeconds = extras?.getInt(TelecomHelper.EXTRA_RING_TIMEOUT_SECONDS, if (source == IncomingCallSource.ALARM) 60 else 45)
-            ?: if (source == IncomingCallSource.ALARM) 60 else 45
+        val defaultRingTimeoutSeconds = if (source == IncomingCallSource.ALARM) 0 else 45
+        val ringTimeoutSeconds = extras?.getInt(TelecomHelper.EXTRA_RING_TIMEOUT_SECONDS, defaultRingTimeoutSeconds)
+            ?: defaultRingTimeoutSeconds
 
         return FakeConnection(
             context = this,

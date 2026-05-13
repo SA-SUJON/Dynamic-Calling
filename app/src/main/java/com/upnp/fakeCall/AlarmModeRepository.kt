@@ -87,6 +87,7 @@ object AlarmModeRepository {
                     put("repeatDays", JSONArray(item.repeatDays.sorted()))
                     put("messageMode", item.messageMode.name)
                     put("ttsMessage", item.ttsMessage)
+                    put("repeatTtsMessage", item.repeatTtsMessage)
                     put("customAudioUri", item.customAudioUri)
                     put("customAudioName", item.customAudioName)
                     put("snoozeEnabled", item.snoozeEnabled)
@@ -126,6 +127,7 @@ object AlarmModeRepository {
             repeatDays = repeatDays,
             messageMode = messageMode,
             ttsMessage = obj.optString("ttsMessage").orEmpty(),
+            repeatTtsMessage = obj.optBoolean("repeatTtsMessage", false),
             customAudioUri = obj.optString("customAudioUri").orEmpty(),
             customAudioName = obj.optString("customAudioName").orEmpty(),
             snoozeEnabled = obj.optBoolean("snoozeEnabled", false),

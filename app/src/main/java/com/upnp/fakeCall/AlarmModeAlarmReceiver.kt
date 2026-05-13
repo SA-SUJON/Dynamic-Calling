@@ -23,6 +23,7 @@ class AlarmModeAlarmReceiver : BroadcastReceiver() {
             )
         }.getOrDefault(AlarmMessageMode.APP_VOICE_TTS)
         val ttsMessage = intent.getStringExtra(EXTRA_TTS_MESSAGE).orEmpty()
+        val repeatTtsMessage = intent.getBooleanExtra(EXTRA_REPEAT_TTS_MESSAGE, false)
         val customAudioUri = intent.getStringExtra(EXTRA_CUSTOM_AUDIO_URI).orEmpty()
         val customAudioName = intent.getStringExtra(EXTRA_CUSTOM_AUDIO_NAME).orEmpty()
         val snoozeEnabled = intent.getBooleanExtra(EXTRA_SNOOZE_ENABLED, false)
@@ -37,6 +38,7 @@ class AlarmModeAlarmReceiver : BroadcastReceiver() {
             context = context,
             messageMode = messageMode,
             ttsMessage = ttsMessage,
+            repeatTtsMessage = repeatTtsMessage,
             customAudioUri = customAudioUri,
             customAudioName = customAudioName,
             speakerDefault = speakerDefault,
@@ -77,6 +79,7 @@ class AlarmModeAlarmReceiver : BroadcastReceiver() {
             repeatDays = repeatDays,
             messageMode = messageMode,
             ttsMessage = ttsMessage,
+            repeatTtsMessage = repeatTtsMessage,
             customAudioUri = customAudioUri,
             customAudioName = customAudioName,
             snoozeEnabled = snoozeEnabled,
@@ -94,6 +97,7 @@ class AlarmModeAlarmReceiver : BroadcastReceiver() {
         context: Context,
         messageMode: AlarmMessageMode,
         ttsMessage: String,
+        repeatTtsMessage: Boolean,
         customAudioUri: String,
         customAudioName: String,
         speakerDefault: AlarmSpeakerDefault,
@@ -120,12 +124,14 @@ class AlarmModeAlarmReceiver : BroadcastReceiver() {
                         }
                         putString(KEY_RUNTIME_MESSAGE_MODE, RUNTIME_MESSAGE_MODE_CUSTOM)
                         remove(KEY_RUNTIME_TTS_MESSAGE)
+                        remove(KEY_RUNTIME_REPEAT_TTS_MESSAGE)
                     }
                     AlarmMessageMode.APP_VOICE_TTS -> {
                         putBoolean(KEY_RUNTIME_AUDIO_OVERRIDE_ENABLED, false)
                         remove(KEY_RUNTIME_AUDIO_OVERRIDE_URI)
                         remove(KEY_RUNTIME_AUDIO_OVERRIDE_NAME)
                         putString(KEY_RUNTIME_MESSAGE_MODE, RUNTIME_MESSAGE_MODE_TTS)
+                        putBoolean(KEY_RUNTIME_REPEAT_TTS_MESSAGE, repeatTtsMessage)
                         putString(
                             KEY_RUNTIME_TTS_MESSAGE,
                             ttsMessage.ifBlank {
@@ -158,6 +164,7 @@ class AlarmModeAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_REPEAT_DAYS = "extra_alarm_repeat_days"
         const val EXTRA_MESSAGE_MODE = "extra_alarm_message_mode"
         const val EXTRA_TTS_MESSAGE = "extra_alarm_tts_message"
+        const val EXTRA_REPEAT_TTS_MESSAGE = "extra_alarm_repeat_tts_message"
         const val EXTRA_CUSTOM_AUDIO_URI = "extra_alarm_custom_audio_uri"
         const val EXTRA_CUSTOM_AUDIO_NAME = "extra_alarm_custom_audio_name"
         const val EXTRA_SNOOZE_ENABLED = "extra_alarm_snooze_enabled"
@@ -171,6 +178,7 @@ class AlarmModeAlarmReceiver : BroadcastReceiver() {
         private const val KEY_RUNTIME_AUDIO_OVERRIDE_NAME = "runtime_audio_override_name"
         private const val KEY_RUNTIME_MESSAGE_MODE = "runtime_message_mode"
         private const val KEY_RUNTIME_TTS_MESSAGE = "runtime_tts_message"
+        private const val KEY_RUNTIME_REPEAT_TTS_MESSAGE = "runtime_repeat_tts_message"
         private const val KEY_RUNTIME_SPEAKER_DEFAULT = "runtime_speaker_default"
         private const val KEY_RUNTIME_SNOOZE_ENABLED = "runtime_snooze_enabled"
         private const val KEY_RUNTIME_SNOOZE_MINUTES = "runtime_snooze_minutes"

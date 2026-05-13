@@ -75,7 +75,7 @@ class TelecomHelper(private val context: Context) {
         private const val KEY_CALL_RING_TIMEOUT_SECONDS = "call_ring_timeout_seconds"
         private const val KEY_ALARM_RING_TIMEOUT_SECONDS = "alarm_ring_timeout_seconds"
         private const val DEFAULT_CALL_RING_TIMEOUT_SECONDS = 45
-        private const val DEFAULT_ALARM_RING_TIMEOUT_SECONDS = 60
+        private const val DEFAULT_ALARM_RING_TIMEOUT_SECONDS = 0
         const val ACCOUNT_ID = "fake_call_provider_account"
         const val EXTRA_FAKE_CALLER_NAME = "extra_fake_caller_name"
         const val EXTRA_FAKE_CALLER_NUMBER = "extra_fake_caller_number"
